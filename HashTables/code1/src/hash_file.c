@@ -209,7 +209,7 @@ void printallrecs(Index_info* index){
 		printf("REMAINING RECORDS:%d\nLOCAL DEPTH:%d\n-----------------\n", 8 - bucktest->rec_num, bucktest->local_depth);
 		for(int i = 0; i < bucktest->rec_num; i++){
 			Record* rectest = (test + sizeof(Bucket_info) + i * sizeof(Record));
-			printf("NAME:%s SURNAME:%s ID:%d   CITY:%s\n",rectest->name, rectest->surname, rectest->id, rectest->city);
+			printf("NAME:%s BLOCK:%d SURNAME:%s ID:%d   CITY:%s\n",rectest->name,j, rectest->surname, rectest->id, rectest->city);
 		}	
 		printf("\n");
 	}
@@ -469,7 +469,6 @@ HT_ErrorCode HT_PrintAllEntries(int indexDesc, int *id) {
 	int error = -1;
 
 	BF_Block_Init(&block);
-	// printallrecs(index);
 	
 	if(id == NULL){
 		error = 0;
@@ -486,15 +485,14 @@ HT_ErrorCode HT_PrintAllEntries(int indexDesc, int *id) {
 
 
 
-	for(int i = 0; i < bucket_info->rec_num ; i++){
-		
+	for(int i = 0; i < bucket_info->rec_num ; i++){		
 		rec = (data + sizeof(Bucket_info) + i * sizeof(Record));
 		if( rec->id == *id ){
-			printf("NAME:%s SURNAME:%s ID:%d   CITY:%s\n",rec->name, rec->surname, rec->id, rec->city);
+			printf("NAME:%s BLOCK:%d SURNAME:%s ID:%d   CITY:%s\n",rec->name,i, rec->surname, rec->id, rec->city);
 			error = 0;
 		}
 	}
-
+	BF_Block_Destroy(&block);
 	if(!error){
 		return HT_OK;
 	}
@@ -502,7 +500,6 @@ HT_ErrorCode HT_PrintAllEntries(int indexDesc, int *id) {
 		printf("NO RECORD WITH ID = %d\n",*id);
 		return error;
 	}
-
 
 }
 
@@ -514,36 +511,43 @@ HT_ErrorCode HashStatistics(char* filename){
 	void* data;
 	int index_desc;
 
-	CALL_BF(HT_OpenIndex(filename, &index_desc));
+	BF_Block_Init(&block);
+	// CALL_BF(HT_OpenIndex(filename, &index_desc));
 
-	index_info = open_files[index_desc];
-	// printf("filedesc %d\n",index_info->file_desc);
+	index_info = open_files[0];
 
-	printf("\n--------STATISTICS--------\n");
-	printf("FILE: %s HAS %d BLOCKS\n", filename, index_info->bucket_num);
+	printf("\n----------STATISTICS----------\n");
+	printf("FILE %s HAS %d BLOCKS\n", filename, index_info->bucket_num);
 
-	// int max = -1;
-	// int min = index_info->max_rec;
-	// for(int i = 1; i < index_info->bucket_num ; i ++){
+	int max = -1;
+	int min = index_info->max_rec + 1;
+	int sum = 0;
+	printf("buck num %d\n",index_info->bucket_num);
+	for(int i = 1; i <= index_info->bucket_num ; i ++){
 		
-	// 	BF_GetBlock(index_desc, i, block);
-	// 	data = BF_Block_GetData(block);
+		BF_GetBlock(index_desc, i, block);		
+		data = BF_Block_GetData(block);
+		bucket_info = data;
 
-	// 	bucket_info = data;
-		
-	// 	// if (bucket_info->rec_num < min)
-	// 	// 	min = bucket_info->rec_num;	
+		BF_Block_SetDirty(block);
+		BF_UnpinBlock(block);
 
-	// 	// if(bucket_info->rec_num > max)
-	// 	// 	max = bucket_info->rec_num;
+		sum += bucket_info->rec_num;
+		// printf("rec num = %d\n",bucket_info->rec_num);
+		if (bucket_info->rec_num <= min)
+			min = bucket_info->rec_num;	
 
-	// }
+		if(bucket_info->rec_num >= max)
+			max = bucket_info->rec_num;
 
-	// printf("MAX %d\n",max);
-	// printf("MIN %d\n",min);
+	}
+	float avg = (float)(sum) / (index_info->bucket_num);
 
-	
+	printf("MAXIMUM  NUMBER OF RECORDS: %d\n",max);
+	printf("MIN NUMBER OF RECORDS: %d\n",min);
+	printf("NUMBER OF RECORDS PER BUCKET: %0.2f\n", avg);
+	printf("-------------------------------\n");
 
-
+	BF_Block_Destroy(&block);
 	return HT_OK;
 }
