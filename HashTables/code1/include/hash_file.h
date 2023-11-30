@@ -65,6 +65,12 @@ HT_ErrorCode HT_InsertEntry(
 	Record record		/* δομή που προσδιορίζει την εγγραφή */
 	);
 
+
+
+HT_ErrorCode HashStatistics(char* filename);
+
+
+
 /*
  * Η συνάρτηση HΤ_PrintAllEntries χρησιμοποιείται για την εκτύπωση όλων των εγγραφών που το record.id έχει τιμή id. 
  * Αν το id είναι NULL τότε θα εκτυπώνει όλες τις εγγραφές του αρχείου κατακερματισμού. 
