@@ -473,7 +473,7 @@ HT_ErrorCode HT_PrintAllEntries(int indexDesc, int *id) {
 	if(id == NULL){
 		error = 0;
 		printallrecs(index);
-		return HT_OK;
+		return HT_OK;  
 	}
 
 	int hash_key = final_key_index(*id ,index->global_depth);
