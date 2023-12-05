@@ -56,6 +56,8 @@ int HP_CreateFile(char *fileName){
   BF_Block_Destroy(&block);
 
   return 0;
+
+  
 }
 
 HP_info* HP_OpenFile(char *fileName, int *file_desc){
