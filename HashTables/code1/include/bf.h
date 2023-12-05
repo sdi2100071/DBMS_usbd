@@ -9,7 +9,6 @@ extern "C" {
 #define BF_BUFFER_SIZE 100     /* Ο μέγιστος αριθμός block που κρατάμε στην μνήμη */
 #define BF_MAX_OPEN_FILES 100  /* Ο μέγιστος αριθμός ανοικτών αρχείων */
 
-
 typedef enum BF_ErrorCode {
   BF_OK,
   BF_OPEN_FILES_LIMIT_ERROR,     /* Υπάρχουν ήδη BF_MAX_OPEN_FILES αρχεία ανοικτά */

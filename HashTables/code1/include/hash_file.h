@@ -1,17 +1,18 @@
 #ifndef HASH_FILE_H
 #define HASH_FILE_H
 
+#include "bf.h"
+
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+#include <math.h>
+
+
 typedef enum HT_ErrorCode {
   HT_OK,
   HT_ERROR
 } HT_ErrorCode;
-
-// typedef struct Shared_data{
-//   int size;
-//   //int empty[MAX_OPEN_FILES];
-//   void** open_files; //open files array
-// }Shared_data;
-
 
 typedef struct Record {
 	int id;
@@ -20,6 +21,24 @@ typedef struct Record {
 	char city[20];
 } Record;
 
+typedef struct Index_info{
+  int global_depth;
+  int file_desc;
+  int size;
+  int bucket_num;
+  int max_rec;
+  int last_block_id;
+  int* block_ids;
+} Index_info;
+
+typedef struct Bucket_info{
+  int local_depth;
+  int rec_num;
+} Bucket_info;
+
+
+
+HT_ErrorCode HashStatistics(char* filename);
 /*
  * Η συνάρτηση HT_Init χρησιμοποιείται για την αρχικοποίηση κάποιον δομών που μπορεί να χρειαστείτε. 
  * Σε περίπτωση που εκτελεστεί επιτυχώς, επιστρέφεται HT_OK, ενώ σε διαφορετική περίπτωση κωδικός λάθους.
@@ -43,7 +62,7 @@ HT_ErrorCode HT_CreateIndex(
  */
 HT_ErrorCode HT_OpenIndex(
 	const char *fileName, 		/* όνομα αρχείου */
-  int *indexDesc            /* θέση στον πίνακα με τα ανοιχτά αρχεία  που επιστρέφεται */
+  	int *indexDesc            /* θέση στον πίνακα με τα ανοιχτά αρχεία  που επιστρέφεται */
 	);
 
 /*
@@ -65,12 +84,6 @@ HT_ErrorCode HT_InsertEntry(
 	Record record		/* δομή που προσδιορίζει την εγγραφή */
 	);
 
-
-
-HT_ErrorCode HashStatistics(char* filename);
-
-
-
 /*
  * Η συνάρτηση HΤ_PrintAllEntries χρησιμοποιείται για την εκτύπωση όλων των εγγραφών που το record.id έχει τιμή id. 
  * Αν το id είναι NULL τότε θα εκτυπώνει όλες τις εγγραφές του αρχείου κατακερματισμού. 
@@ -80,6 +93,34 @@ HT_ErrorCode HT_PrintAllEntries(
 	int indexDesc,	/* θέση στον πίνακα με τα ανοιχτά αρχεία */
 	int *id 				/* τιμή του πεδίου κλειδιού προς αναζήτηση */
 	);
+
+
+
+///////////////////////////////////////////// -- EXTRA FUNCTIONS -- ///////////////////////////////////////////// 
+
+//https://web.archive.org/web/20071223173210/http://www.concentric.net/~Ttwang/tech/inthash.htm
+unsigned int hash_func(unsigned int	key);
+
+//Transforms an integer to binary (string) 
+void intToBinary(int key, char* string_key);
+
+
+//Returns the (gdepth) lsb in string_key variable
+void least_significant_bits(char* msb, char* string_key, int gdepth);
+
+
+//Transforms string to integer
+int stringToInt(char* msb);
+
+
+//Calls all the needed fucntions to return the final position of the hashed key
+int final_key_index(int id, int bit_num);
+
+
+//Prints all records of a file
+void printallrecs(Index_info* index);
+
+
 
 
 #endif // HASH_FILE_H
