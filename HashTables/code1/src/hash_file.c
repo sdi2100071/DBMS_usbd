@@ -13,34 +13,19 @@
   }                         \
 }
 
-
 //Stores all the indexes of the files that have been opened
 Index_info* open_files[MAX_OPEN_FILES];
 
-HT_ErrorCode HT_Init(){
-
-
-
-  
-	return HT_OK;
-}
-
-
-HT_ErrorCode HT_CreateIndex(const char *filename, int depth) {
-	int file_desc;
-  	BF_Block* block;
+HT_ErrorCode HT_Init(int file_desc, int depth){
+	BF_Block* block;
   	Index_info* index;
-
-	CALL_BF(BF_CreateFile(filename)); 
-	CALL_BF(BF_OpenFile(filename, &file_desc));
-
+	
 	//Allocate the first block of the file which will store the metadata of the file
   	BF_Block_Init(&block);
   	CALL_BF(BF_AllocateBlock(file_desc, block));
 
   	void* data;
 	data = BF_Block_GetData(block);
-
   	index = data;
 	
 	index->bucket_num = 0;
@@ -56,6 +41,17 @@ HT_ErrorCode HT_CreateIndex(const char *filename, int depth) {
 	BF_Block_SetDirty(block);
 	BF_UnpinBlock(block);
   	BF_Block_Destroy(&block);
+
+	return HT_OK;
+}
+
+
+HT_ErrorCode HT_CreateIndex(const char *filename, int depth) {
+	int file_desc;
+
+	CALL_BF(BF_CreateFile(filename)); 
+	CALL_BF(BF_OpenFile(filename, &file_desc));
+	HT_Init(file_desc, GLOBAL_DEPTH);
 
 	return HT_OK;
 }
@@ -397,15 +393,14 @@ HT_ErrorCode HT_PrintAllEntries(int indexDesc, int *id) {
 	BF_Block_Destroy(&block);
 
 
-	printf("\nINFORMATION ABOUT THE PERSON WITH ID: %d \n", *id);
-
+	printf("\nINFORMATION ABOUT THE PERSON WITH ID:%d \n", *id);
 	//Iterate through each record that the bucket has.
     for(int i = 0; i < bucket_info->rec_num; i++){     
         rec = (data + sizeof(Bucket_info) + i * sizeof(Record));
 		/*Print the record's information when the specific one is found.(Does not return HT_OK 
 		in case there are many people with the same id, in other scenarios) */
         if(rec->id == *id){
-            printf("NAME:%s |SURNAME:%s |ID:%d |CITY:%s\n",rec->name, rec->surname, rec->id, rec->city);
+            printf("NAME:%s SURNAME:%s ID:%d CITY:%s\n",rec->name, rec->surname, rec->id, rec->city);
             error = 0;
         }
     }
@@ -434,7 +429,7 @@ HT_ErrorCode HashStatistics(char* filename){
 
     index_info = open_files[index_desc];
 
-    printf("\n-------------STATISTICS-------------\n");
+    printf("\n----------STATISTICS----------\n");
     printf("FILE %s HAS %d BLOCKS/BUCKETS\n", filename, index_info->bucket_num);
 
     int max = -1;
@@ -466,7 +461,7 @@ HT_ErrorCode HashStatistics(char* filename){
     printf("MAXIMUM NUMBER OF RECORDS: %d\n",max);
     printf("MIN NUMBER OF RECORDS: %d\n",min);
     printf("NUMBER OF RECORDS PER BUCKET: %0.2f\n", avg);
-    printf("-------------------------------------\n");
+    printf("-------------------------------\n");
 
     BF_Block_Destroy(&block);
     return HT_OK;
