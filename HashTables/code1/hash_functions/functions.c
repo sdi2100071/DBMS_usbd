@@ -11,7 +11,7 @@ unsigned int hash_func(unsigned int	key) {
   key = key ^ (key >> 22);
   return (int) key;
 }
-
+   
 
 //Transforms an integer to binary (string) 
 void intToBinary(int key, char* string_key) {
