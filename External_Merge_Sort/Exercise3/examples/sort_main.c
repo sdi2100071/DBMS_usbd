@@ -8,8 +8,6 @@
 #define OUT_NAME "out"
 
 
-
-
 int createAndPopulateHeapFile(char* filename);
 
 void sortPhase(int file_desc,int chunkSize);
@@ -19,6 +17,26 @@ void mergePhases(int inputFileDesc,int chunkSize,int bWay, int* fileCounter);
 int nextOutputFile(int* fileCounter);
 
 int main() {
+
+  /*TEST*/
+
+  Record rec1 ;
+  Record rec2 ;
+
+  rec1 = randomRecord();
+  rec2 = randomRecord();
+
+  printRecord(rec1);
+  printRecord(rec2);
+
+  if(shouldSwap(&rec1, &rec2)){
+      printf("TRUE");
+  }
+  else{
+      printf("FALSE");
+  }
+
+
   int chunkSize=5;
   int bWay= 4;
   int fileIterator;
@@ -27,6 +45,7 @@ int main() {
   int file_desc = createAndPopulateHeapFile(FILE_NAME);
   sortPhase(file_desc,chunkSize);
   mergePhases(file_desc,chunkSize,bWay,&fileIterator);
+
 }
 
 int createAndPopulateHeapFile(char* filename){
@@ -44,6 +63,8 @@ int createAndPopulateHeapFile(char* filename){
   }
   return file_desc;
 }
+
+
 
 /*Performs the sorting phase of external merge sort algorithm on a file specified by 'file_desc', using chunks of size 'chunkSize'*/
 void sortPhase(int file_desc,int chunkSize){ 
