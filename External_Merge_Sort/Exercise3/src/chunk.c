@@ -76,19 +76,71 @@ int CHUNK_GetIthRecordInChunk(CHUNK* chunk, int i, Record* record) {
 
 }
 
-int CHUNK_UpdateIthRecord(CHUNK* chunk,  int i, Record record){
+int CHUNK_UpdateIthRecord(CHUNK* chunk, int i, Record record) {
+   
+    // Check if the provided index is within the range of records in the chunk
+    if (i >= 0 && i < chunk->recordsInChunk) {
+        // Calculate the block and record index within the chunk
+        int blockIndex = i / HP_GetRecordCounter(chunk->file_desc, chunk->from_BlockId);
+        int recordIndexInBlock = i % HP_GetRecordCounter(chunk->file_desc, chunk->from_BlockId);
 
+        // Calculate the actual block ID based on the starting block ID of the chunk
+        int blockId = chunk->from_BlockId + blockIndex;
+
+        // Assuming a function to update the record in a block, replace accordingly
+        if (HP_UpdateRecord(chunk->file_desc, blockId, recordIndexInBlock, record) == 0) {
+            return 0; // Success
+        } else {
+            return -1; // Error in updating the record in the block
+        }
+    } else {
+        return -1; // Index out of bounds
+    }
 }
 
-void CHUNK_Print(CHUNK chunk){
-
-}
-
-
-CHUNK_RecordIterator CHUNK_CreateRecordIterator(CHUNK *chunk){
-
-}
-
-int CHUNK_GetNextRecord(CHUNK_RecordIterator *iterator,Record* record){
+void CHUNK_Print(CHUNK chunk) {
     
+    // Loop through each record in the chunk and print it
+    Record record;
+    for (int i = 0; i < chunk.recordsInChunk; ++i) {
+        
+        if (CHUNK_GetIthRecordInChunk(&chunk, i, &record) == 0)
+            printRecord(record);
+
+        else 
+            printf("Error retrieving record %d\n", i);
+    }
+}
+
+
+CHUNK_RecordIterator CHUNK_CreateRecordIterator(CHUNK *chunk) {
+    CHUNK_RecordIterator iterator;
+    iterator.chunk = *chunk;
+    iterator.currentBlockId = chunk->from_BlockId;
+    iterator.cursor = 0;
+    return iterator;
+}
+
+int CHUNK_RecordIterator_GetNext(CHUNK_RecordIterator *iterator, Record *record) {
+    // Calculate the total number of records in the chunk
+    int totalRecords = 0;
+    for (int i = iterator->chunk.from_BlockId; i <= iterator->chunk.to_BlockId; ++i) {
+        totalRecords += HP_GetRecordCounter(iterator->chunk.file_desc, i);
+    }
+
+    // Check if there are more records to iterate
+    if (iterator->cursor < totalRecords) {
+        // Retrieve the next record using the existing CHUNK_GetIthRecordInChunk function
+        if (CHUNK_GetIthRecordInChunk(&(iterator->chunk), iterator->cursor, record) == 0) {
+            // Move the cursor to the next record
+            ++iterator->cursor;
+            return 1; // Success
+        } 
+        else {
+            return -1; // Error in retrieving the record
+        }
+    
+    } else {
+        return 0; // No more records to iterate
+    }
 }
