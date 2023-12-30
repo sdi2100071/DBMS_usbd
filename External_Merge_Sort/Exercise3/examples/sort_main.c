@@ -7,7 +7,6 @@
 #define FILE_NAME "data.db"
 #define OUT_NAME "out"
 
-
 int createAndPopulateHeapFile(char* filename);
 
 void sortPhase(int file_desc,int chunkSize);
@@ -17,71 +16,135 @@ void mergePhases(int inputFileDesc,int chunkSize,int bWay, int* fileCounter);
 int nextOutputFile(int* fileCounter);
 
 int main() {
+    int chunkSize = 5;
+    int bWay = 4;
+    int fileIterator;
+    BF_Init(LRU);
+    int file_desc = createAndPopulateHeapFile(FILE_NAME);
 
-  /*TEST*/
+    Record rec;
+    CHUNK chunk;
+    CHUNK_Iterator ci = CHUNK_CreateIterator(file_desc, 3);
+  
+    chunk.from_BlockId = 1;
+    chunk.to_BlockId = 3;
+    chunk.file_desc = file_desc;
+    chunk.recordsInChunk = 3 * 9;
+    chunk.blocksInChunk = 3;
 
-  Record rec1 ;
-  Record rec2 ;
+    int num = ci.lastBlocksID / chunk.blocksInChunk;
+    if(ci.lastBlocksID % chunk.blocksInChunk != 0)
+        num ++;
 
-  rec1 = randomRecord();
-  rec2 = randomRecord();
-
-  printRecord(rec1);
-  printRecord(rec2);
-
-  if(shouldSwap(&rec1, &rec2)){
-      printf("TRUE");
-  }
-  else{
-      printf("FALSE");
-  }
+    sort_FileInChunks(file_desc, 3);
+    for(int i = 1; i <= num; i++){
+        CHUNK_Print(chunk);
+        ci.current = chunk.to_BlockId;
+        printf("--------------------------\n");
+        CHUNK_GetNext(&ci, &chunk);
+    }
 
 
-  int chunkSize=5;
-  int bWay= 4;
-  int fileIterator;
-  //
-  BF_Init(LRU);
-  int file_desc = createAndPopulateHeapFile(FILE_NAME);
-  sortPhase(file_desc,chunkSize);
-  mergePhases(file_desc,chunkSize,bWay,&fileIterator);
 
+    //Out of bound
+    // CHUNK_GetIthRecordInChunk(&chunk, 18, &rec);
+    // printf("RECORD IN POSITION THAT DOES NOT EXIT:");
+    // printRecord(rec);
+    // printf("\n");
+  
+    // //Starting from 0 to recordsInChunk - 1
+    // printf("RECORD IN 2nd POS:");
+    // printRecord(rec);
+    // printf("\n");
+
+    // Record newrec = randomRecord();
+    // printf("NEW RECORD:");
+    // printRecord(newrec);
+    // printf("\n");
+
+    // CHUNK_UpdateIthRecord(&chunk, 2, newrec);
+    // CHUNK_GetIthRecordInChunk(&chunk, 2, &rec);
+    // printf("UPDATED_RECORD IN 2nd POS:");
+    // printRecord(rec);
+    // printf("\n");
+
+
+
+    // CHUNK_Print(chunk);
+    // sort_Chunk(&chunk);
+    // printf("-------AFTER:-------\n");
+    // CHUNK_Print(chunk);
+
+    // CHUNK_GetNext(&ci, &chunk);
+    // CHUNK_Print(chunk);
+    // CHUNK_GetNext(&ci, &chunk);
+    // CHUNK_Print(chunk);
+    // CHUNK_GetNext(&ci, &chunk);
+    // CHUNK_Print(chunk);
+    // CHUNK_GetNext(&ci, &chunk);
+    // CHUNK_Print(chunk);
+    // CHUNK_GetNext(&ci, &chunk);
+    // CHUNK_Print(chunk);
+    // CHUNK_GetNext(&ci, &chunk);
+    // CHUNK_Print(chunk);
+    // CHUNK_GetNext(&ci, &chunk);
+    // CHUNK_Print(chunk);
+    // CHUNK_GetNext(&ci, &chunk);
+    // CHUNK_Print(chunk);
+    // CHUNK_GetNext(&ci, &chunk);
+    // CHUNK_Print(chunk);
+    // CHUNK_GetNext(&ci, &chunk);
+    // CHUNK_Print(chunk);
+    // CHUNK_GetNext(&ci, &chunk);
+    // CHUNK_Print(chunk);
+    // CHUNK_GetNext(&ci, &chunk);
+    // CHUNK_Print(chunk);
+    // CHUNK_GetNext(&ci, &chunk);
+    // CHUNK_Print(chunk);
+    // CHUNK_GetNext(&ci, &chunk);
+    // CHUNK_Print(chunk);
+
+
+
+    // CHUNK_GetIthRecordInChunk(&chunk, 2, &rec);
+    // printRecord(rec);
+
+    // sortPhase(file_desc,chunkSize);  
+
+    // mergePhases(file_desc,chunkSize,bWay,&fileIterator);
 }
 
 int createAndPopulateHeapFile(char* filename){
-  HP_CreateFile(filename);
+    HP_CreateFile(filename);
   
-  int file_desc;
-  HP_OpenFile(filename, &file_desc);
+    int file_desc;
+    HP_OpenFile(filename, &file_desc);
 
-  Record record;
-  srand(12569874);
-  for (int id = 0; id < RECORDS_NUM; ++id)
-  {
-    record = randomRecord();
-    HP_InsertEntry(file_desc, record);
-  }
+    Record record;
+    srand(12569874);
+    for (int id = 0; id < RECORDS_NUM; ++id){
+        record = randomRecord();
+        HP_InsertEntry(file_desc, record);
+    }
   return file_desc;
 }
 
-
-
 /*Performs the sorting phase of external merge sort algorithm on a file specified by 'file_desc', using chunks of size 'chunkSize'*/
 void sortPhase(int file_desc,int chunkSize){ 
-  sort_FileInChunks( file_desc, chunkSize);
+    sort_FileInChunks( file_desc, chunkSize);
 }
 
 /* Performs the merge phase of the external merge sort algorithm  using chunks of size 'chunkSize' and 'bWay' merging. The merge phase may be performed in more than one cycles.*/
 void mergePhases(int inputFileDesc,int chunkSize,int bWay, int* fileCounter){
-  int oututFileDesc;
-  while(chunkSize<=HP_GetIdOfLastBlock(inputFileDesc)){
-    oututFileDesc =   nextOutputFile(fileCounter);
-    merge(inputFileDesc, chunkSize, bWay, oututFileDesc );
-    HP_CloseFile(inputFileDesc);
-    chunkSize*=bWay;
-    inputFileDesc = oututFileDesc;
-  }
-  HP_CloseFile(oututFileDesc);
+    int oututFileDesc;
+    while(chunkSize<=HP_GetIdOfLastBlock(inputFileDesc)){
+        oututFileDesc =   nextOutputFile(fileCounter);
+        merge(inputFileDesc, chunkSize, bWay, oututFileDesc );
+        HP_CloseFile(inputFileDesc);
+        chunkSize*=bWay;
+        inputFileDesc = oututFileDesc;
+    }
+    HP_CloseFile(oututFileDesc);
 }
 
 /*Creates a sequence of heap files: out0.db, out1.db, ... and returns for each heap file its corresponding file descriptor. */
